@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.cry.opengldemo5.R;
+import com.cry.opengldemo5.shape.TriangleColorShapeRender;
 import com.cry.opengldemo5.shape.TriangleShapeRender;
 
 public class ViewActivity extends AppCompatActivity {
@@ -41,7 +42,7 @@ public class ViewActivity extends AppCompatActivity {
             glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.setEGLContextClientVersion(2);
             //设置自己的Render.Render 内进行图形的绘制
-            glSurfaceView.setRenderer(new TriangleShapeRender(this));
+            glSurfaceView.setRenderer(new TriangleColorShapeRender(this));
             isRenderSet = true;
             setContentView(glSurfaceView);
         } else {
