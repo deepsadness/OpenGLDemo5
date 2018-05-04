@@ -47,7 +47,7 @@ public class TriangleShapeRender extends ViewGLRender {
 
     //顶点的坐标系
     private static float TRIANGLE_COORDS[] = {
-            //Order of coordinates: X, Y, Z，RGB
+            //Order of coordinates: X, Y, Z
             0.5f, 0.5f, 0.0f, // top
             -0.5f, -0.5f, 0.0f, // bottom left
             0.5f, -0.5f, 0.0f   // bottom right

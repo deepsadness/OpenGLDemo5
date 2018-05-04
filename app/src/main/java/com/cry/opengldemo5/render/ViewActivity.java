@@ -31,13 +31,14 @@ public class ViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 //        setContentView(R.layout.activity_view);
 
-        //创建一个GLSurfaceView
-        glSurfaceView = new GLSurfaceView(this);
+
 
         boolean isSupportEs2 = GLESUtils.isSupportEs2(this);
 
         //表示支持
         if (isSupportEs2) {
+            //创建一个GLSurfaceView
+            glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.setEGLContextClientVersion(2);
             //设置自己的Render.Render 内进行图形的绘制
             glSurfaceView.setRenderer(new TriangleShapeRender(this));
