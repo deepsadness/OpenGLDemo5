@@ -7,56 +7,23 @@ import android.opengl.Matrix;
 import com.cry.opengldemo5.common.Constant;
 import com.cry.opengldemo5.render.GLESUtils;
 import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.shape.base.Circle;
+import com.cry.opengldemo5.shape.base.Cylinder;
+import com.cry.opengldemo5.shape.base.Point;
+import com.cry.opengldemo5.shape.base.ShapeBuilder;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * 添加变化矩阵。让图形在手机上看起来正常一点
- *
- * <p>
- * - 归一化设备坐标系。将设备的坐标都归一
- * - 虚拟坐标空间。
- * 通过正交投影的方式。将虚拟坐标变换成归一化设备坐标时。实际上定义了三维世界的部分区域
- * <p>
- * <p>
- * 矩阵的复习。
- * 单位矩阵
- * 平移矩阵。可以让物体平移。
- * 表示位置的矩阵。[x,y,z,w] openGL通常会把w通常为1。正交矩阵之后，w就不为1了
- * <p>
- * 正交投影。
- * 通过正交投影的矩阵变化，让图形显示的像是正常的。不需要考虑设备屏幕适配的相关因素。
- * 透视出发。
- * 其实就是得到一个方向的视图。可以想象成是正视图。
- * <p>
- * <p>
- * orthoM()
- * float[] 目标数组。只要的有16个元素，才能存储正交投影矩阵
- * mOffset 结果矩阵起始的偏移量
- * left    x轴的最小范围
- * right   x轴的最大范围
- * bottom  y轴的最小范围
- * top     y轴的最大范围
- * near    z轴的最小范围
- * far     z轴的最大范围
- * <p>
- * 正交矩阵会把所有再左右之间，上下之间和远近之间的事物映射到归一化设备坐标中。从-1到1的范围。
- * 和平移矩阵的主要区别是z是一个负值。效果是反转z轴。以为只，物体离得越远，z的负值就越小
- * <p>
- * 原因是归一化的设备坐标系使用的是左手。而OpenGL使用的是右手。所以 =>归一化坐标，就需要反过来。
- * <p>
- * <p>
- * <p>
- * <p>
- * 0 .更新着色器的代码
- * 1. 在onChange方法内设置矩阵
+ * 想要实现 立方体
  */
-public class TriangleColorMatrixShapeRender extends ViewGLRender {
+public class Cube3DShapeRender extends ViewGLRender {
     /**
      * 更新shader的位置
      */
@@ -76,15 +43,6 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
     //一个点需要的byte偏移量。
     private static final int STRIDE = TOTAL_COMPONENT_COUNT * Constant.BYTES_PER_FLOAT;
 
-    //顶点的坐标系
-    private static float TRIANGLE_COLOR_COORDS[] = {
-            //Order of coordinates: X, Y, Z, R,G,B,
-            0.5f, 0.5f, 0.0f, 1.f, 1f, 1f, // top
-            -0.5f, -0.5f, 0.0f, 1.f, 1f, 1f,  // bottom left
-            0.5f, -0.5f, 0.0f, 1.f, 1f, 1f // bottom right
-    };
-
-    private static final int VERTEX_COUNT = TRIANGLE_COLOR_COORDS.length / TOTAL_COMPONENT_COUNT;
     private final Context context;
 
     //pragram的指针
@@ -97,31 +55,56 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
 
      */
     private static final String U_MATRIX = "u_Matrix";
-    private Matrix mModelMatrix;
+    //模型矩阵
+    private float[] mModelMatrix = new float[16];
+
     private Matrix mViewMatrix;
 
     //投影矩阵
     private float[] mProjectionMatrix = new float[16];
     private int uMatrix;
 
-    public TriangleColorMatrixShapeRender(Context context) {
-        this.context = context;
-  /*
-        0. 调用GLES20的包的方法时，其实就是调用JNI的方法。
-        所以分配本地的内存块，将java数据复制到本地内存中，而本地内存可以不受垃圾回收的控制
-        1. 使用nio中的ByteBuffer来创建内存区域。
-        2. ByteOrder.nativeOrder()来保证，同一个平台使用相同的顺序
-        3. 然后可以通过put方法，将内存复制过去。
 
-        因为这里是Float，所以就使用floatBuffer
-         */
+    private float[] CUBE_COORD = {
+            //order  x,y,z r,g,b
+            -0.2f, 0.2f, 0.2f, 0f,1f,0f,   //正面左上0
+            -0.2f, -0.2f, 0.2f, 0f,1f,0f,  //正面左下1
+            0.2f, -0.2f, 0.2f, 0f,1f,0f,    //正面右下2
+            0.2f, 0.2f, 0.2f,0f,1f,0f,     //正面右上3
+            -0.2f, 0.2f, -0.2f, 1f,0f,0f,   //反面左上4
+            -0.2f, -0.2f, -0.2f, 1f,0f,0f,  //反面左下5
+            0.2f, -0.2f, -0.2f, 1f,0f,0f,   //反面右下6
+            0.2f, 0.2f, -0.2f, 1f,0f,0f,   //反面右上7
+    };
+
+    private final short CUBE_INDEX[] = {
+            6, 7, 4, 6, 4, 5,    //后面
+            6, 3, 7, 6, 2, 3,    //右面
+            6, 5, 1, 6, 1, 2,    //下面
+            0, 3, 2, 0, 2, 1,    //正面
+            0, 1, 5, 0, 5, 4,    //左面
+            0, 7, 3, 0, 4, 7,    //上面
+    };
+
+    private int VERTEX_COUNT = CUBE_COORD.length / TOTAL_COMPONENT_COUNT;
+    private final ShortBuffer mIndexShortBuffer;
+
+    public Cube3DShapeRender(Context context) {
+        this.context = context;
+
         mVertexFloatBuffer = ByteBuffer
-                .allocateDirect(TRIANGLE_COLOR_COORDS.length * Constant.BYTES_PER_FLOAT)
+                .allocateDirect(CUBE_COORD.length * Constant.BYTES_PER_FLOAT)
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer()
-                .put(TRIANGLE_COLOR_COORDS);
+                .put(CUBE_COORD);
         mVertexFloatBuffer.position(0);
 
+        mIndexShortBuffer = ByteBuffer
+                .allocateDirect(CUBE_INDEX.length * Constant.BYTES_PER_SHORT)
+                .order(ByteOrder.nativeOrder())
+                .asShortBuffer()
+                .put(CUBE_INDEX);
+        mIndexShortBuffer.position(0);
     }
 
     @Override
@@ -162,42 +145,54 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
                 mVertexFloatBuffer);
         GLES20.glEnableVertexAttribArray(aColor);
 
-
-        /***************
-         **新增代码******
-         *************/
         uMatrix = GLES20.glGetUniformLocation(mProgramObjectId, U_MATRIX);
-
+        //开启深度测试
+        GLES20.glEnable(GLES20.GL_DEPTH_TEST);
     }
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
         super.onSurfaceChanged(gl, width, height);
-        //主要还是长宽进行比例缩放
-        float aspectRatio = width > height ?
-                (float) width / (float) height :
-                (float) height / (float) width;
+//        //主要还是长宽进行比例缩放
+        float aspectRatio =
+                (float) width / (float) height
+                ;
 
-        if (width > height) {
-            //横屏。需要设置的就是左右。
-            Matrix.orthoM(mProjectionMatrix, 0, -aspectRatio, aspectRatio, -1, 1f, -1.f, 1f);
-        } else {
-            //竖屏。需要设置的就是上下
-            Matrix.orthoM(mProjectionMatrix, 0, -1, 1f, -aspectRatio, aspectRatio, -1.f, 1f);
-        }
+        /**
+         * fovy是表示视角 45du 的视角来创建一个投影
+         */
+        Matrix.perspectiveM(mProjectionMatrix, 0, 45, aspectRatio, 1f, 10f);
+
+        //设置模型矩阵.沿着z轴平移-2
+        Matrix.setIdentityM(mModelMatrix, 0);
+        Matrix.translateM(mModelMatrix, 0, 0f, 0f, -2f);
+
+        //添加旋转
+        Matrix.rotateM(mModelMatrix, 0, 30f, 1f, -1f, -1f);
+
+
+        //缓存相乘的结果
+        float[] temp = new float[16];
+        Matrix.multiplyMM(temp, 0, mProjectionMatrix, 0, mModelMatrix, 0);
+//        最后复制到投影矩阵中
+        System.arraycopy(temp, 0, mProjectionMatrix, 0, temp.length);
     }
 
     //在OnDrawFrame中进行绘制
     @Override
     public void onDrawFrame(GL10 gl) {
-        super.onDrawFrame(gl);
+//        super.onDrawFrame(gl);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         //传递给着色器
-        GLES20.glUniformMatrix4fv(uMatrix,1,false,mProjectionMatrix,0);
+        GLES20.glUniformMatrix4fv(uMatrix, 1, false, mProjectionMatrix, 0);
 
-        //绘制三角形.
-        //draw arrays的几种方式 GL_TRIANGLES三角形 GL_TRIANGLE_STRIP三角形带的方式(开始的3个点描述一个三角形，后面每多一个点，多一个三角形) GL_TRIANGLE_FAN扇形(可以描述圆形)
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, VERTEX_COUNT);
+        GLES20.glDrawElements(
+                GLES20.GL_TRIANGLES,
+                CUBE_INDEX.length,
+                GLES20.GL_UNSIGNED_SHORT,//数据的类型
+                mIndexShortBuffer
+                );
 
     }
 }

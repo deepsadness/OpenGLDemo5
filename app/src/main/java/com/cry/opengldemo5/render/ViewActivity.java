@@ -14,6 +14,8 @@ import android.widget.Toast;
 
 import com.cry.opengldemo5.R;
 import com.cry.opengldemo5.shape.CircleShapeRender;
+import com.cry.opengldemo5.shape.Cube3DShapeRender;
+import com.cry.opengldemo5.shape.Cylinder3DShapeRender;
 import com.cry.opengldemo5.shape.SquareShapeRender;
 import com.cry.opengldemo5.shape.Triangle3DShapeRender;
 import com.cry.opengldemo5.shape.TriangleColorMatrixShapeRender;
@@ -46,7 +48,7 @@ public class ViewActivity extends AppCompatActivity {
             glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.setEGLContextClientVersion(2);
             //设置自己的Render.Render 内进行图形的绘制
-            glSurfaceView.setRenderer(new CircleShapeRender(this));
+            glSurfaceView.setRenderer(new Cube3DShapeRender(this));
             isRenderSet = true;
             setContentView(glSurfaceView);
         } else {
