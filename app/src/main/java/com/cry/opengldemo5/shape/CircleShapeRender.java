@@ -7,6 +7,8 @@ import android.opengl.Matrix;
 import com.cry.opengldemo5.common.Constant;
 import com.cry.opengldemo5.render.GLESUtils;
 import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.shape.base.Circle;
+import com.cry.opengldemo5.shape.base.Point;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -16,47 +18,9 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * 添加变化矩阵。让图形在手机上看起来正常一点
  *
- * <p>
- * - 归一化设备坐标系。将设备的坐标都归一
- * - 虚拟坐标空间。
- * 通过正交投影的方式。将虚拟坐标变换成归一化设备坐标时。实际上定义了三维世界的部分区域
- * <p>
- * <p>
- * 矩阵的复习。
- * 单位矩阵
- * 平移矩阵。可以让物体平移。
- * 表示位置的矩阵。[x,y,z,w] openGL通常会把w通常为1。正交矩阵之后，w就不为1了
- * <p>
- * 正交投影。
- * 通过正交投影的矩阵变化，让图形显示的像是正常的。不需要考虑设备屏幕适配的相关因素。
- * 透视出发。
- * 其实就是得到一个方向的视图。可以想象成是正视图。
- * <p>
- * <p>
- * orthoM()
- * float[] 目标数组。只要的有16个元素，才能存储正交投影矩阵
- * mOffset 结果矩阵起始的偏移量
- * left    x轴的最小范围
- * right   x轴的最大范围
- * bottom  y轴的最小范围
- * top     y轴的最大范围
- * near    z轴的最小范围
- * far     z轴的最大范围
- * <p>
- * 正交矩阵会把所有再左右之间，上下之间和远近之间的事物映射到归一化设备坐标中。从-1到1的范围。
- * 和平移矩阵的主要区别是z是一个负值。效果是反转z轴。以为只，物体离得越远，z的负值就越小
- * <p>
- * 原因是归一化的设备坐标系使用的是左手。而OpenGL使用的是右手。所以 =>归一化坐标，就需要反过来。
- * <p>
- * <p>
- * <p>
- * <p>
- * 0 .更新着色器的代码
- * 1. 在onChange方法内设置矩阵
  */
-public class TriangleColorMatrixShapeRender extends ViewGLRender {
+public class CircleShapeRender extends ViewGLRender {
     /**
      * 更新shader的位置
      */
@@ -76,21 +40,16 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
     //一个点需要的byte偏移量。
     private static final int STRIDE = TOTAL_COMPONENT_COUNT * Constant.BYTES_PER_FLOAT;
 
-    //顶点的坐标系
-    private static float TRIANGLE_COLOR_COORDS[] = {
-            //Order of coordinates: X, Y, Z, R,G,B,
-            0.5f, 0.5f, 0.0f, 1.f, 0f, 0f, // top
-            -0.5f, -0.5f, 0.0f, 0.f, 1f, 0f,  // bottom left
-            0.5f, -0.5f, 0.0f, 0.f, 0f, 1f // bottom right
-    };
+    private static int VERTEX_COUNT;
 
-    private static final int VERTEX_COUNT = TRIANGLE_COLOR_COORDS.length / TOTAL_COMPONENT_COUNT;
     private final Context context;
 
     //pragram的指针
     private int mProgramObjectId;
     //顶点数据的内存映射
     private final FloatBuffer mVertexFloatBuffer;
+    private final float[] mCircleColorCoords;
+
 
     /*
     添加矩阵
@@ -104,24 +63,95 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
     private float[] mProjectionMatrix = new float[16];
     private int uMatrix;
 
-    public TriangleColorMatrixShapeRender(Context context) {
+    public CircleShapeRender(Context context) {
         this.context = context;
-  /*
-        0. 调用GLES20的包的方法时，其实就是调用JNI的方法。
-        所以分配本地的内存块，将java数据复制到本地内存中，而本地内存可以不受垃圾回收的控制
-        1. 使用nio中的ByteBuffer来创建内存区域。
-        2. ByteOrder.nativeOrder()来保证，同一个平台使用相同的顺序
-        3. 然后可以通过put方法，将内存复制过去。
 
-        因为这里是Float，所以就使用floatBuffer
-         */
+        //创建一个圆。
+        //圆心
+        Point center = new Point(0f, 0f, 0f);
+        //圆的半径
+        float radius = 0.5f;
+        //多少个点来切分这个圆.越多的切分。越圆
+        int numbersRoundCircle = 360;
+        //
+        Circle circle = new Circle(center, radius);
+        mCircleColorCoords = createCircleCoords(circle, numbersRoundCircle);
         mVertexFloatBuffer = ByteBuffer
-                .allocateDirect(TRIANGLE_COLOR_COORDS.length * Constant.BYTES_PER_FLOAT)
+                .allocateDirect(mCircleColorCoords.length * Constant.BYTES_PER_FLOAT)
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer()
-                .put(TRIANGLE_COLOR_COORDS);
+                .put(mCircleColorCoords);
         mVertexFloatBuffer.position(0);
 
+        VERTEX_COUNT = getCircleVertexNum(numbersRoundCircle);
+    }
+
+    private float[] createCircleCoords(Circle circle, int numbersRoundCircle) {
+        //先计算总共需要多少个点
+        int needNumber = getCircleVertexNum(numbersRoundCircle);
+        //创建数组
+        float[] circleColorCoord = new float[needNumber * TOTAL_COMPONENT_COUNT];
+        //接下来给每个点分配数据
+
+        //对每一组点进行赋值
+        for (int numberIndex = 0; numberIndex < needNumber; numberIndex++) {
+            int indexOffset = numberIndex * TOTAL_COMPONENT_COUNT;
+
+            if (numberIndex == 0) {   //第一个点。就是圆心
+                //位置
+                circleColorCoord[indexOffset] = circle.center.x;
+                circleColorCoord[indexOffset + 1] = circle.center.y;
+                circleColorCoord[indexOffset + 2] = circle.center.z;
+
+                //下面是颜色。给一个白色
+                circleColorCoord[indexOffset + 3] = 1.f;
+                circleColorCoord[indexOffset + 4] = 1.f;
+                circleColorCoord[indexOffset + 5] = 1.f;
+            } else if (numberIndex < needNumber - 1) {    //切分圆的点
+                //需要根据半径。中心点。来结算
+                int angleIndex = numberIndex - 1;
+                float angleRadius = (float) (((float) angleIndex / (float) numbersRoundCircle) * Math.PI * 2f);
+                float centerX = circle.center.x;
+                float centerY = circle.center.y;
+                float centerZ = circle.center.z;
+                float radius = circle.radius;
+                float tempX = (float) (centerX + radius * Math.cos(angleRadius));
+                float tempY = (float) (centerY + radius * Math.sin(angleRadius));
+                float temp = centerZ + 0;
+
+                //位置
+
+                circleColorCoord[indexOffset] = tempX;
+                circleColorCoord[indexOffset + 1] = tempY;
+                circleColorCoord[indexOffset + 2] = temp;
+
+                //下面是颜色。给一个白色
+                circleColorCoord[indexOffset + 3] = (float) (1.f* Math.cos(angleRadius));
+                circleColorCoord[indexOffset + 4] = (float) (1.f* Math.sin(angleRadius));
+                circleColorCoord[indexOffset + 5] = 1.f;
+            } else { //最后一个点了。重复数据中的二组的位置
+                //位置.index为1的点
+                int copyTargetIndex = 1;
+                //复制点
+                circleColorCoord[indexOffset] = circleColorCoord[copyTargetIndex * TOTAL_COMPONENT_COUNT];
+                circleColorCoord[indexOffset + 1] = circleColorCoord[copyTargetIndex * TOTAL_COMPONENT_COUNT + 1];
+                circleColorCoord[indexOffset + 2] = circleColorCoord[copyTargetIndex * TOTAL_COMPONENT_COUNT + 2];
+
+                circleColorCoord[indexOffset + 3] = circleColorCoord[copyTargetIndex * TOTAL_COMPONENT_COUNT + 3];
+                circleColorCoord[indexOffset + 4] = circleColorCoord[copyTargetIndex * TOTAL_COMPONENT_COUNT + 4];
+                circleColorCoord[indexOffset + 5] = circleColorCoord[copyTargetIndex * TOTAL_COMPONENT_COUNT + 5];
+            }
+
+        }
+        return circleColorCoord;
+
+    }
+
+    /*
+    需要的点的个数等于 1(圆心)+切分圆的点数+1(为了闭合，切分圆的起点和终点，需要重复一次)
+     */
+    private int getCircleVertexNum(int numbersRoundCircle) {
+        return +1 + numbersRoundCircle + 1;
     }
 
     @Override
@@ -193,11 +223,10 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
         super.onDrawFrame(gl);
 
         //传递给着色器
-        GLES20.glUniformMatrix4fv(uMatrix,1,false,mProjectionMatrix,0);
+        GLES20.glUniformMatrix4fv(uMatrix, 1, false, mProjectionMatrix, 0);
 
         //绘制三角形.
         //draw arrays的几种方式 GL_TRIANGLES三角形 GL_TRIANGLE_STRIP三角形带的方式(开始的3个点描述一个三角形，后面每多一个点，多一个三角形) GL_TRIANGLE_FAN扇形(可以描述圆形)
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, VERTEX_COUNT);
-
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_FAN, 0, VERTEX_COUNT);
     }
 }

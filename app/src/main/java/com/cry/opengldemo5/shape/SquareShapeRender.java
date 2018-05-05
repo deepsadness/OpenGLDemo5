@@ -11,52 +11,23 @@ import com.cry.opengldemo5.render.ViewGLRender;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * 添加变化矩阵。让图形在手机上看起来正常一点
- *
+ * 从TriangleColorMatrixShapeRender 而来。
  * <p>
- * - 归一化设备坐标系。将设备的坐标都归一
- * - 虚拟坐标空间。
- * 通过正交投影的方式。将虚拟坐标变换成归一化设备坐标时。实际上定义了三维世界的部分区域
+ * 正方形
+ * 分析一下:
+ * 正方形就是两个三角形。4个点构成
  * <p>
- * <p>
- * 矩阵的复习。
- * 单位矩阵
- * 平移矩阵。可以让物体平移。
- * 表示位置的矩阵。[x,y,z,w] openGL通常会把w通常为1。正交矩阵之后，w就不为1了
- * <p>
- * 正交投影。
- * 通过正交投影的矩阵变化，让图形显示的像是正常的。不需要考虑设备屏幕适配的相关因素。
- * 透视出发。
- * 其实就是得到一个方向的视图。可以想象成是正视图。
- * <p>
- * <p>
- * orthoM()
- * float[] 目标数组。只要的有16个元素，才能存储正交投影矩阵
- * mOffset 结果矩阵起始的偏移量
- * left    x轴的最小范围
- * right   x轴的最大范围
- * bottom  y轴的最小范围
- * top     y轴的最大范围
- * near    z轴的最小范围
- * far     z轴的最大范围
- * <p>
- * 正交矩阵会把所有再左右之间，上下之间和远近之间的事物映射到归一化设备坐标中。从-1到1的范围。
- * 和平移矩阵的主要区别是z是一个负值。效果是反转z轴。以为只，物体离得越远，z的负值就越小
- * <p>
- * 原因是归一化的设备坐标系使用的是左手。而OpenGL使用的是右手。所以 =>归一化坐标，就需要反过来。
- * <p>
- * <p>
- * <p>
- * <p>
- * 0 .更新着色器的代码
- * 1. 在onChange方法内设置矩阵
+ * 1. 修改数组
+ * 2. 添加buffer
+ * 3.修改绘画
  */
-public class TriangleColorMatrixShapeRender extends ViewGLRender {
+public class SquareShapeRender extends ViewGLRender {
     /**
      * 更新shader的位置
      */
@@ -76,21 +47,41 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
     //一个点需要的byte偏移量。
     private static final int STRIDE = TOTAL_COMPONENT_COUNT * Constant.BYTES_PER_FLOAT;
 
-    //顶点的坐标系
-    private static float TRIANGLE_COLOR_COORDS[] = {
+//    //正方形的点0
+//    private static float SQUARE_COLOR_COORDS[] = {
+//            //Order of coordinates: X, Y, Z, R,G,B,
+//            -0.5f, 0.5f, 0.0f, 1.f, 0f, 0f,  //  0.top left RED
+//            -0.5f, -0.5f, 0.0f, 0.f, 0f, 1f, //  1.bottom right Blue
+//            0.5f, -0.5f, 0.0f, 0.f, 1f, 0f,  //  2.bottom left GREEN
+//            0.5f, 0.5f, 0.0f, 0.f, 0f, 0f,   //  3.top right WHITE
+//    };
+
+ //正方形的点1
+    private static float SQUARE_COLOR_COORDS[] = {
             //Order of coordinates: X, Y, Z, R,G,B,
-            0.5f, 0.5f, 0.0f, 1.f, 0f, 0f, // top
-            -0.5f, -0.5f, 0.0f, 0.f, 1f, 0f,  // bottom left
-            0.5f, -0.5f, 0.0f, 0.f, 0f, 1f // bottom right
+            -0.5f, 0.5f, 0.0f, 1.f, 0f, 0f,  //  0.top left RED
+            -0.5f, -0.5f, 0.0f, 0.f, 0f, 1f, //  1.bottom right Blue
+            0.5f, 0.5f, 0.0f, 1f, 1f, 1f,   //  3.top right WHITE
+            0.5f, -0.5f, 0.0f, 0.f, 1f, 0f,  //  2.bottom left GREEN
     };
 
-    private static final int VERTEX_COUNT = TRIANGLE_COLOR_COORDS.length / TOTAL_COMPONENT_COUNT;
+//    /*
+//    创建一个遍历的点的顺序.
+//    0,1,2,0 一个三角形
+//    0,3,2 另一个三角
+//     */
+//    private static short SQUARE_INDEX[] = {
+//            0, 1, 2, 0, 3, 2
+//    };
+
+    private static final int VERTEX_COUNT = SQUARE_COLOR_COORDS.length / TOTAL_COMPONENT_COUNT;
     private final Context context;
 
     //pragram的指针
     private int mProgramObjectId;
     //顶点数据的内存映射
     private final FloatBuffer mVertexFloatBuffer;
+//    private final ShortBuffer mIndexBuffer;
 
     /*
     添加矩阵
@@ -104,24 +95,25 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
     private float[] mProjectionMatrix = new float[16];
     private int uMatrix;
 
-    public TriangleColorMatrixShapeRender(Context context) {
+    public SquareShapeRender(Context context) {
         this.context = context;
-  /*
-        0. 调用GLES20的包的方法时，其实就是调用JNI的方法。
-        所以分配本地的内存块，将java数据复制到本地内存中，而本地内存可以不受垃圾回收的控制
-        1. 使用nio中的ByteBuffer来创建内存区域。
-        2. ByteOrder.nativeOrder()来保证，同一个平台使用相同的顺序
-        3. 然后可以通过put方法，将内存复制过去。
 
-        因为这里是Float，所以就使用floatBuffer
-         */
         mVertexFloatBuffer = ByteBuffer
-                .allocateDirect(TRIANGLE_COLOR_COORDS.length * Constant.BYTES_PER_FLOAT)
+                .allocateDirect(SQUARE_COLOR_COORDS.length * Constant.BYTES_PER_FLOAT)
                 .order(ByteOrder.nativeOrder())
                 .asFloatBuffer()
-                .put(TRIANGLE_COLOR_COORDS);
+                .put(SQUARE_COLOR_COORDS);
         mVertexFloatBuffer.position(0);
 
+//        /*
+//        新增-为位置添加内存空间
+//         */
+//        mIndexBuffer = ByteBuffer
+//                .allocateDirect(SQUARE_INDEX.length * Constant.BYTES_PER_SHORT)
+//                .order(ByteOrder.nativeOrder())
+//                .asShortBuffer()
+//                .put(SQUARE_INDEX);
+//        mIndexBuffer.position(0);
     }
 
     @Override
@@ -193,11 +185,14 @@ public class TriangleColorMatrixShapeRender extends ViewGLRender {
         super.onDrawFrame(gl);
 
         //传递给着色器
-        GLES20.glUniformMatrix4fv(uMatrix,1,false,mProjectionMatrix,0);
+        GLES20.glUniformMatrix4fv(uMatrix, 1, false, mProjectionMatrix, 0);
 
         //绘制三角形.
         //draw arrays的几种方式 GL_TRIANGLES三角形 GL_TRIANGLE_STRIP三角形带的方式(开始的3个点描述一个三角形，后面每多一个点，多一个三角形) GL_TRIANGLE_FAN扇形(可以描述圆形)
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, VERTEX_COUNT);
-
+//        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, VERTEX_COUNT);
+        //使用indexBuffer的方式
+//        GLES20.glDrawElements(GLES20.GL_TRIANGLES, SQUARE_INDEX.length, GLES20.GL_UNSIGNED_SHORT, mIndexBuffer);
+        //1.使用三角形带的方式
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0, VERTEX_COUNT);
     }
 }
