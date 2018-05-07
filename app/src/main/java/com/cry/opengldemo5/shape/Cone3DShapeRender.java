@@ -7,6 +7,9 @@ import android.opengl.Matrix;
 import com.cry.opengldemo5.common.Constant;
 import com.cry.opengldemo5.render.GLESUtils;
 import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.shape.base.Circle;
+import com.cry.opengldemo5.shape.base.Point;
+import com.cry.opengldemo5.shape.base.ShapeBuilder;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -17,25 +20,9 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * 想要实现 立方体
- * <p>
- * GL_POINTS
- * GL_LINES
- * GL_LINE_LOOP
- * GL_LINE_STRIP
- * GL_TRIANGLES               每三个顶之间绘制三角形，之间不连接
- * GL_TRIANGLE_STRIP          顺序在每三个顶点之间均绘制三角形。这个方法可以保证从相同的方向上所有三角形均被绘制。以V0V1V2,V1V2V3,V2V3V4……的形式绘制三角形
- * GL_TRIANGLE_FAN            以V0V1V2,V0V2V3,V0V3V4，……的形式绘制三角形
- * <p>
- * int GL_POINTS       //将传入的顶点坐标作为单独的点绘制
- * int GL_LINES        //将传入的坐标作为单独线条绘制，ABCDEFG六个顶点，绘制AB、CD、EF三条线
- * int GL_LINE_STRIP   //将传入的顶点作为折线绘制，ABCD四个顶点，绘制AB、BC、CD三条线
- * int GL_LINE_LOOP    //将传入的顶点作为闭合折线绘制，ABCD四个顶点，绘制AB、BC、CD、DA四条线。
- * int GL_TRIANGLES    //将传入的顶点作为单独的三角形绘制，ABCDEF绘制ABC,DEF两个三角形
- * int GL_TRIANGLE_FAN    //将传入的顶点作为扇面绘制，ABCDEF绘制ABC、ACD、ADE、AEF四个三角形
- * int GL_TRIANGLE_STRIP   //将传入的顶点作为三角条带绘制，ABCDEF绘制ABC,BCD,CDE,DEF四个三角形
+ * 圆锥体
  */
-public class Ball3DShapeRender extends ViewGLRender {
+public class Cone3DShapeRender extends ViewGLRender {
     /**
      * 更新shader的位置
      */
@@ -78,10 +65,10 @@ public class Ball3DShapeRender extends ViewGLRender {
 
     private int VERTEX_COUNT;
 
-    public Ball3DShapeRender(Context context) {
+    public Cone3DShapeRender(Context context) {
         this.context = context;
 
-        float[] dataPos = createBallPosition();
+        float[] dataPos = createConePosition();
 
         mVertexFloatBuffer = ByteBuffer.allocateDirect(dataPos.length * TOTAL_COMPONENT_COUNT)
                 .order(ByteOrder.nativeOrder())
@@ -94,13 +81,12 @@ public class Ball3DShapeRender extends ViewGLRender {
 
     private float step = 5f;
 
-    private float[] createBallPosition() {
-        //创建球的坐标系
-        //球上每一点的坐标 为 x=R*cos(a)*sin(b),y = R*sin(b),z = R*cos(a)*cos(b)
-        //a是 圆心于该点的连线 和 xy屏幕的夹角 ，b是连线于xz屏幕的与z的夹角
+    private float[] createConePosition() {
 
-        //球的半径
-        float ballRadius = 0.35f;
+        //圆锥的高度
+        float coneHeight = 0.3f;
+        //圆锥的底面大小
+        float coneRadius = 0.15f;
 
         //纬度切分的大小
         int latitudePieces = 5;
@@ -108,19 +94,21 @@ public class Ball3DShapeRender extends ViewGLRender {
 
         ArrayList<Float> dataPos = new ArrayList<>();
 
-        //需要使用上下两个环构成一个带。来画面
-        for (int latitude = -90; latitude < 90 + latitudePieces; latitude += latitudePieces) {
-            //xy截面是圆
-            double angleXY = latitude * (Math.PI / 180f);
-            double angleXY2 = (latitude + latitudePieces) * (Math.PI / 180f);
+        //将纬度按照90划分
+        for (int latitude = 0; latitude < 90 + latitudePieces; latitude += latitudePieces) {
+            //xy截面是一个等腰三角形
+
+            float currentHeightCut = latitude * coneHeight / 90f;
+            float currentHeightCut2 = (latitude + latitudePieces) * coneHeight / 90f;
+
             //计算出改纬度的每一个经度的坐标
-            float rXZ = (float) Math.cos(angleXY) * ballRadius;
-            float rYZ = (float) Math.sin(angleXY) * ballRadius;
+            float rXZ = (float) currentHeightCut / coneHeight * coneRadius;
+            float rYZ = (float) coneHeight - currentHeightCut;
 
-            float rXZ2 = (float) Math.cos(angleXY2) * ballRadius;
-            float rYZ2 = (float) Math.sin(angleXY2) * ballRadius;
+            float rXZ2 = (float) currentHeightCut2 / coneHeight * coneRadius;
+            float rYZ2 = (float) coneHeight - currentHeightCut2;
 
-            //xz截面也是圆
+            //纬度还是圆
             for (int longitude = 0; longitude < 360 + longitudePieces; longitude += longitudePieces) {
                 double angleXZ = longitude * (Math.PI / 180);
                 double angleXZ2 = (longitude + longitudePieces) * (Math.PI / 180);
@@ -134,7 +122,15 @@ public class Ball3DShapeRender extends ViewGLRender {
 
                 float cR = (float) (1f);
                 float cG = (float) (1f);
-                float cB = (float) (1f);
+                float cB = (float) (1f * Math.cos(angleXZ2));
+//                if (latitude == 90) {
+//                    cR = 0.5f;
+//                    cG = 0.5f;
+//                    cB = 0.5f;
+//                } else {
+//
+//                }
+
                 dataPos.add(cR);
                 dataPos.add(cG);
                 dataPos.add(cB);
@@ -147,14 +143,83 @@ public class Ball3DShapeRender extends ViewGLRender {
                 dataPos.add(zXZ2);
 
                 float cR2 = (float) (1f);
-                float cG2 = (float) (1f);
+                float cG2 = (float) (1f * Math.cos(angleXZ2));
                 float cB2 = (float) (1f);
+
+//                if (latitude == 90) {
+//                    cR2 = 0.5f;
+//                    cG2 = 0.5f;
+//                    cB2 = 0.5f;
+//                } else {
+//
+//                }
                 dataPos.add(cR2);
                 dataPos.add(cG2);
                 dataPos.add(cB2);
             }
-
         }
+
+//        int needNumber = ShapeBuilder.getCircleVertexNum(360);
+//
+//        Circle circle = new Circle(new Point(0f, 0f, 0f), coneRadius);
+//        //对每一组点进行赋值
+//        for (int numberIndex = 0; numberIndex < needNumber; numberIndex++) {
+//            int indexOffset = numberIndex * TOTAL_COMPONENT_COUNT;
+//
+//            float tempX0 = 0;
+//            float tempY0 = 0;
+//            float tempZ0 = 0;
+//            if (numberIndex == 0) {   //第一个点。就是圆心
+//                //位置
+//                dataPos.add(circle.center.x);
+//                dataPos.add(circle.center.y);
+//                dataPos.add(circle.center.z);
+//
+//                dataPos.add(1.f);
+//                dataPos.add(1.f);
+//                dataPos.add(1.f);
+//
+//            } else if (numberIndex < needNumber - 1) {    //切分圆的点
+//                //需要根据半径。中心点。来结算
+//                int angleIndex = numberIndex - 1;
+//                float angleRadius = (float) (((float) angleIndex / (float) 360) * Math.PI * 2f);
+//                float centerX = circle.center.x;
+//                float centerY = circle.center.y;
+//                float centerZ = circle.center.z;
+//                float radius = circle.radius;
+//                float tempX = (float) (centerX + radius * Math.cos(angleRadius));
+//                float tempY = (float) (centerY + radius * Math.sin(angleRadius));
+//                float temp = centerZ + 0;
+//                if (angleIndex == 0) {
+//                    tempX0 = tempX;
+//                    tempY0 = tempY;
+//                    tempZ0 = temp;
+//                }
+//                //位置
+//                dataPos.add(tempX);
+//                dataPos.add(tempY);
+//                dataPos.add(temp);
+//
+//                dataPos.add(1.f);
+//                dataPos.add(1.f);
+//                dataPos.add(1.f);
+//
+//            } else { //最后一个点了。重复数据中的二组的位置
+//                //位置.index为1的点
+//                int copyTargetIndex = 1;
+//                //复制点
+//                dataPos.add(tempX0);
+//                dataPos.add(tempY0);
+//                dataPos.add(tempZ0);
+//
+//                dataPos.add(1.f);
+//                dataPos.add(1.f);
+//                dataPos.add(1.f);
+//
+//            }
+//
+//        }
+
         int size = dataPos.size();
         float[] temp = new float[size];
         for (int i = 0; i < size; i++) {
@@ -223,7 +288,7 @@ public class Ball3DShapeRender extends ViewGLRender {
         Matrix.translateM(mModelMatrix, 0, 0f, 0f, -2f);
 
         //添加旋转
-        Matrix.rotateM(mModelMatrix, 0, 30f, 1f, -1f, -1f);
+        Matrix.rotateM(mModelMatrix, 0, 180f, 1f, -1f, 1f);
 
 
         //缓存相乘的结果
@@ -243,10 +308,17 @@ public class Ball3DShapeRender extends ViewGLRender {
         GLES20.glUniformMatrix4fv(uMatrix, 1, false, mProjectionMatrix, 0);
 
         GLES20.glDrawArrays(
-                GLES20.GL_LINE_STRIP,
+                GLES20.GL_TRIANGLE_FAN,
                 0,
                 VERTEX_COUNT
         );
+
+        GLES20.glDrawArrays(
+                GLES20.GL_TRIANGLE_FAN,
+                VERTEX_COUNT - 361,
+                360
+        );
+
 
     }
 }

@@ -1,26 +1,12 @@
 package com.cry.opengldemo5.render;
 
-import android.app.ActivityManager;
-import android.content.pm.ConfigurationInfo;
 import android.opengl.GLSurfaceView;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.widget.Toast;
 
-import com.cry.opengldemo5.R;
-import com.cry.opengldemo5.shape.CircleShapeRender;
-import com.cry.opengldemo5.shape.Cube3DShapeRender;
-import com.cry.opengldemo5.shape.Cylinder3DShapeRender;
-import com.cry.opengldemo5.shape.SquareShapeRender;
-import com.cry.opengldemo5.shape.Triangle3DShapeRender;
-import com.cry.opengldemo5.shape.TriangleColorMatrixShapeRender;
-import com.cry.opengldemo5.shape.TriangleColorShapeRender;
-import com.cry.opengldemo5.shape.TriangleShapeRender;
+import com.cry.opengldemo5.shape.Ball3DShapeRender;
+import com.cry.opengldemo5.shape.Cone3DShapeRender;
 
 public class ViewActivity extends AppCompatActivity {
 
@@ -38,8 +24,6 @@ public class ViewActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 //        setContentView(R.layout.activity_view);
 
-
-
         boolean isSupportEs2 = GLESUtils.isSupportEs2(this);
 
         //表示支持
@@ -48,7 +32,7 @@ public class ViewActivity extends AppCompatActivity {
             glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.setEGLContextClientVersion(2);
             //设置自己的Render.Render 内进行图形的绘制
-            glSurfaceView.setRenderer(new Cube3DShapeRender(this));
+            glSurfaceView.setRenderer(new Cone3DShapeRender(this));
             isRenderSet = true;
             setContentView(glSurfaceView);
         } else {
