@@ -5,8 +5,8 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -35,7 +35,7 @@ import javax.microedition.khronos.opengles.GL10;
  * int GL_TRIANGLE_FAN    //将传入的顶点作为扇面绘制，ABCDEF绘制ABC、ACD、ADE、AEF四个三角形
  * int GL_TRIANGLE_STRIP   //将传入的顶点作为三角条带绘制，ABCDEF绘制ABC,BCD,CDE,DEF四个三角形
  */
-public class Ball3DShapeRender extends ViewGLRender {
+public class Ball3DShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */

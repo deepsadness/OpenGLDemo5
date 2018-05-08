@@ -5,13 +5,12 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -27,7 +26,7 @@ import javax.microedition.khronos.opengles.GL10;
  * 2. 添加buffer
  * 3.修改绘画
  */
-public class SquareShapeRender extends ViewGLRender {
+public class SquareShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */

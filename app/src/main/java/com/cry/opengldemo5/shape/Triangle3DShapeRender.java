@@ -3,11 +3,10 @@ package com.cry.opengldemo5.shape;
 import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.Matrix;
-import android.os.Build;
 
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -46,7 +45,7 @@ import javax.microedition.khronos.opengles.GL10;
  * <p>
  * 最后的矩阵为 = 投影矩阵*视图矩阵*模型矩阵
  */
-public class Triangle3DShapeRender extends ViewGLRender {
+public class Triangle3DShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */

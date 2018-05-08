@@ -4,8 +4,8 @@ import android.content.Context;
 import android.opengl.GLES20;
 
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -31,7 +31,7 @@ import javax.microedition.khronos.opengles.GL10;
  * <p>
  * Created by a2957 on 2018/5/3.
  */
-public class TriangleColorShapeRender extends ViewGLRender {
+public class TriangleColorShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */

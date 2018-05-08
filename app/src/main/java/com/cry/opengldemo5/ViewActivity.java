@@ -1,11 +1,11 @@
-package com.cry.opengldemo5.render;
+package com.cry.opengldemo5;
 
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.cry.opengldemo5.texture.Texture2DShapeRender;
+import com.cry.opengldemo5.common.GLESUtils;
 import com.cry.opengldemo5.texture.TextureFilterShapeRender;
 
 public class ViewActivity extends AppCompatActivity {

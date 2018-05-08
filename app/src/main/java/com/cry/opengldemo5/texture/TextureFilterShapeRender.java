@@ -9,8 +9,8 @@ import android.opengl.Matrix;
 
 import com.cry.opengldemo5.R;
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -43,7 +43,7 @@ import javax.microedition.khronos.opengles.GL10;
  * 向外延伸其到这个中心的距离即可实现放大效果。
  * 具体实现，可参考着色器中vChangeType=4时的操作。
  */
-public class TextureFilterShapeRender extends ViewGLRender {
+public class TextureFilterShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */

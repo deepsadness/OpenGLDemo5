@@ -5,8 +5,8 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -56,7 +56,7 @@ import javax.microedition.khronos.opengles.GL10;
  * 0 .更新着色器的代码
  * 1. 在onChange方法内设置矩阵
  */
-public class TriangleColorMatrixShapeRender extends ViewGLRender {
+public class TriangleColorMatrixShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */

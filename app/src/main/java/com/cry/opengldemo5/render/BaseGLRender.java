@@ -18,7 +18,7 @@ import javax.microedition.khronos.opengles.GL10;
  *
  * Created by a2957 on 2018/5/3.
  */
-public class ViewGLRender implements GLSurfaceView.Renderer {
+public class BaseGLRender implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         //0.简单的给窗口填充一种颜色

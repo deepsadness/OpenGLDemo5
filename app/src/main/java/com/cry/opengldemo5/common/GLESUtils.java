@@ -1,4 +1,4 @@
-package com.cry.opengldemo5.render;
+package com.cry.opengldemo5.common;
 
 import android.app.ActivityManager;
 import android.content.Context;
@@ -7,7 +7,6 @@ import android.opengl.GLES20;
 import android.os.Build;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;

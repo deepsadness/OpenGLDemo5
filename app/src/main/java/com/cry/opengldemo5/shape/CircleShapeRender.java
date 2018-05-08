@@ -5,8 +5,8 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 import com.cry.opengldemo5.shape.base.Circle;
 import com.cry.opengldemo5.shape.base.Point;
 
@@ -20,7 +20,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  *
  */
-public class CircleShapeRender extends ViewGLRender {
+public class CircleShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */

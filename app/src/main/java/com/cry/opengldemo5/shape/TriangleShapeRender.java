@@ -4,8 +4,8 @@ import android.content.Context;
 import android.opengl.GLES20;
 
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -30,7 +30,7 @@ import javax.microedition.khronos.opengles.GL10;
  * 2. 和OpenGL绑定数据的方法
  * Created by a2957 on 2018/5/3.
  */
-public class TriangleShapeRender extends ViewGLRender {
+public class TriangleShapeRender extends BaseGLRender {
     private static final String VERTEX_SHADER_FILE = "shape/triangle_vertex_shader.glsl";
     private static final String FRAGMENT_SHADER_FILE = "shape/triangle_fragment_shader.glsl";
     private static final String A_POSITION = "aPosition";

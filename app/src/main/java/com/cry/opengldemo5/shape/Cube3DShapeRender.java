@@ -5,12 +5,8 @@ import android.opengl.GLES20;
 import android.opengl.Matrix;
 
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
-import com.cry.opengldemo5.shape.base.Circle;
-import com.cry.opengldemo5.shape.base.Cylinder;
-import com.cry.opengldemo5.shape.base.Point;
-import com.cry.opengldemo5.shape.base.ShapeBuilder;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -23,7 +19,7 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * 想要实现 立方体
  */
-public class Cube3DShapeRender extends ViewGLRender {
+public class Cube3DShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */

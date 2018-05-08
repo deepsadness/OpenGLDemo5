@@ -9,8 +9,8 @@ import android.opengl.Matrix;
 
 import com.cry.opengldemo5.R;
 import com.cry.opengldemo5.common.Constant;
-import com.cry.opengldemo5.render.GLESUtils;
-import com.cry.opengldemo5.render.ViewGLRender;
+import com.cry.opengldemo5.common.GLESUtils;
+import com.cry.opengldemo5.render.BaseGLRender;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -71,7 +71,7 @@ import javax.microedition.khronos.opengles.GL10;
  * //设置纹理矩阵
  * glUniformli(uTextureUnitLocation,0)
  */
-public class Texture2DShapeRender extends ViewGLRender {
+public class Texture2DShapeRender extends BaseGLRender {
     /**
      * 更新shader的位置
      */
