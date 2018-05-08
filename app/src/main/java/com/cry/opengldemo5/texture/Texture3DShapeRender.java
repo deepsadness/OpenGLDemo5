@@ -179,7 +179,7 @@ public class Texture3DShapeRender extends ViewGLRender {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;
         //加载Bitmap
-        mBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.lenna, options);
+        mBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher, options);
         //保存到textureObjectId
         int[] textureObjectId = new int[1];
         if (mBitmap != null && !mBitmap.isRecycled()) {
@@ -219,7 +219,7 @@ public class Texture3DShapeRender extends ViewGLRender {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;
         //加载Bitmap
-        mBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.lenna, options);
+        mBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher, options);
         //保存到textureObjectId
         int[] textureObjectId = new int[1];
         if (mBitmap != null && !mBitmap.isRecycled()) {
@@ -233,9 +233,9 @@ public class Texture3DShapeRender extends ViewGLRender {
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
 
 //            //设置环绕方向S，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
-//            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
 //            //设置环绕方向T，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
-//            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 //
 
             //根据以上指定的参数，生成一个2D纹理

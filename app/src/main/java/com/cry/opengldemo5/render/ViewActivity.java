@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import com.cry.opengldemo5.shape.Ball3DShapeRender;
 import com.cry.opengldemo5.shape.Cone3DShapeRender;
+import com.cry.opengldemo5.shape.SquareShapeRender;
 import com.cry.opengldemo5.texture.Texture3DShapeRender;
 
 public class ViewActivity extends AppCompatActivity {
