@@ -7,6 +7,7 @@ import android.widget.Toast;
 
 import com.cry.opengldemo5.shape.Ball3DShapeRender;
 import com.cry.opengldemo5.shape.Cone3DShapeRender;
+import com.cry.opengldemo5.texture.Texture3DShapeRender;
 
 public class ViewActivity extends AppCompatActivity {
 
@@ -32,7 +33,7 @@ public class ViewActivity extends AppCompatActivity {
             glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.setEGLContextClientVersion(2);
             //设置自己的Render.Render 内进行图形的绘制
-            glSurfaceView.setRenderer(new Cone3DShapeRender(this));
+            glSurfaceView.setRenderer(new Texture3DShapeRender(this));
             isRenderSet = true;
             setContentView(glSurfaceView);
         } else {
