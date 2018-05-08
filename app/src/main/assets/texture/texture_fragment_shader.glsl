@@ -5,6 +5,6 @@ uniform sampler2D u_TextureUnit;
 varying vec2 v_TextureCoordinates;
 
 void main(){
-    //2D纹理
+    //渲染2D纹理，交给fragColor
     gl_FragColor=texture2D(u_TextureUnit,v_TextureCoordinates);
 }

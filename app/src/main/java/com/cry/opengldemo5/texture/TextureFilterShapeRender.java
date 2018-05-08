@@ -20,67 +20,41 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * OpenGL中的我哪里可以用来表示图像。照片甚至由一个数学算法生成的分型数据。
+ * 简单色彩处理
  * <p>
- * 1. 创建纹理的第一步
- * 通过这样的方式可以生成一个纹理。生成的纹理的id,保存在texttureObjectId中。
- * 如果返回的不是0，则表示成功
- * int[] textureObjectIds = new int[1];
- * GLES20.glGenTextures(1,textureObjectIds,0);
+ * 在GLSL中，颜色是用包含四个浮点的向量vec4表示，四个浮点分别表示RGBA四个通道，取值范围为0.0-1.0。
+ * 我们先读取图片每个像素的色彩值，再对读取到的色彩值进行调整，这样就可以完成对图片的色彩处理了。
+ * 我们应该都知道，黑白图片上，每个像素点的RGB三个通道值应该是相等的。
+ * 知道了这个，将彩色图片处理成黑白图片就非常简单了。我们直接出处像素点的RGB三个通道，
+ * 相加然后除以3作为处理后每个通道的值就可以得到一个黑白图片了。
+ * 这是均值的方式是常见黑白图片处理的一种方法。
+ * 类似的还有权值方法（给予RGB三个通道不同的比例）、只取绿色通道等方式。
+ * 与之类似的，冷色调的处理就是单一增加蓝色通道的值，暖色调的处理可以增加红绿通道的值。
+ * 还有其他复古、浮雕等处理也都差不多。
  * <p>
- * 2.加载位图数据并于纹理绑定
+ * 图片模糊处理
+ * 图片模糊处理相对上面的色调处理稍微复杂一点，通常图片模糊处理是采集周边多个点，
+ * 然后利用这些点的色彩和这个点自身的色彩进行计算，得到一个新的色彩值作为目标色彩。
+ * 模糊处理有很多算法，类似高斯模糊、径向模糊等等。
  * <p>
- * 2-1. OpenGL需要非压缩方式的原始数据。得到bitmap
- * 2-2. 纹理绑定
- * //绑定纹理，告诉它绑定的是一个2D的纹理
- * GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,textureObjectIds[0]);
- * <p>
- * 2-3. 理解纹理过滤。
- * 设置放大和缩小的时候，使用的插值算法
- * //缩小使用三线性过滤
- * GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR_MIPMAP_LINEAR);
- * //放大使用双线性过滤
- * GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
- * <p>
- * 2-4 加载纹理
- * 将我们得到的位图数据，复制到当前的绑定的纹理对象中。
- * 因为这些数据已经被复制到OpenGL中了，所以Android中不需要继续持有这个位图数据了。调用recycle()方法立即释放
- * GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D,0,bitmap,0);
- * //接着生成2D的mip贴图
- * GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D);
- * 2-5 解除绑定防止其他的修改
- * GLES20.glBindTexture(GLES20.GL_TEXTURE_2D,0);
- * <p>
- * 3.更新着色器
- * 更新着色器，让其能够接受我们的纹理
- * <p>
- * 4.定义纹理坐标
- * ST
- * 裁剪纹理。
- * <p>
- * 5.使用着色器的套路。得到对应的属性值，
- * <p>
- * 我们使用纹理单元保存了纹理。因为一个GPU只能同时绘制数量有限的纹理，它使用这些纹理党员表示当前正在被绘制的活动的我呢里。
- * <p>
- * * 设置uniform并返回属性位置
- * //设置激活的纹理单元到0。因为我们刚刚开始的时候，将纹理绑定到这个纹理单元上了。
- * glActiveTexture(GL_TEXTURE0)
- * <p>
- * //绑定纹理单元
- * glBindTexture(GL_TEXTURE_2D,textureId)
- * //设置纹理矩阵
- * glUniformli(uTextureUnitLocation,0)
+ * 放大镜效果
+ * 放大镜效果相对模糊处理来说，处理过程也会相对简单一些。
+ * 我们只需要将制定区域的像素点，都以需要放大的区域中心点为中心，
+ * 向外延伸其到这个中心的距离即可实现放大效果。
+ * 具体实现，可参考着色器中vChangeType=4时的操作。
  */
-public class Texture3DShapeRender extends ViewGLRender {
+public class TextureFilterShapeRender extends ViewGLRender {
     /**
      * 更新shader的位置
      */
     private static final String VERTEX_SHADER_FILE = "texture/texture_vertex_shader.glsl";
-    private static final String FRAGMENT_SHADER_FILE = "texture/texture_fragment_shader.glsl";
+    private static final String FRAGMENT_SHADER_FILE = "texture/texture_fragment_fliter_shader.glsl";
     private static final String A_POSITION = "a_Position";
     private static final String A_COORDINATE = "a_TextureCoordinates";
     private static final String U_TEXTURE = "u_TextureUnit";
     private static final String U_MATRIX = "u_Matrix";
+    private static final String U_CHANGE_COLOR = "u_ChangeColor";
+    private static final String U_CHANGE_TYPE = "u_ChangeType";
 
     private static final int COORDS_PER_VERTEX = 2;
     private static final int COORDS_PER_ST = 2;
@@ -115,8 +89,11 @@ public class Texture3DShapeRender extends ViewGLRender {
     private int uMatrix;
     private int uTexture;
     private int mTextureId;
+    private int uChangeColor;
+    private int uChangeType;
+    private int changeType = 3;
 
-    public Texture3DShapeRender(Context context) {
+    public TextureFilterShapeRender(Context context) {
         this.context = context;
 
         mVertexFloatBuffer = ByteBuffer
@@ -165,6 +142,10 @@ public class Texture3DShapeRender extends ViewGLRender {
                 mVertexFloatBuffer);
 
         GLES20.glEnableVertexAttribArray(aCoordinate);
+
+
+        uChangeColor = GLES20.glGetUniformLocation(mProgramObjectId, U_CHANGE_COLOR);
+        uChangeType = GLES20.glGetUniformLocation(mProgramObjectId, U_CHANGE_TYPE);
 
         uMatrix = GLES20.glGetUniformLocation(mProgramObjectId, U_MATRIX);
 
@@ -219,7 +200,7 @@ public class Texture3DShapeRender extends ViewGLRender {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inScaled = false;
         //加载Bitmap
-        mBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher, options);
+        mBitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.lenna, options);
         //保存到textureObjectId
         int[] textureObjectId = new int[1];
         if (mBitmap != null && !mBitmap.isRecycled()) {
@@ -271,13 +252,38 @@ public class Texture3DShapeRender extends ViewGLRender {
         }
     }
 
+    //黑白图片的公式：RGB 按照 0.2989 R，0.5870 G 和 0.1140 B 的比例构成像素灰度值。
+    float[] grayFilterColorData = {0.299f, 0.587f, 0.114f};
+
+    //简单的色彩处理
+    float[] coolFilterColorData = {0.0f, 0.0f, 0.1f};
+    float[] warmFilterColorData = {0.1f, 0.1f, 0.0f};
+    float[] blurFilterColorData = {0.006f, 0.004f, 0.002f};
+    //放大
+    float[] magnFilterColorData = {0.0f,0.0f,0.4f};
+
+
     //在OnDrawFrame中进行绘制
     @Override
     public void onDrawFrame(GL10 gl) {
         super.onDrawFrame(gl);
 
         //传递给着色器
-        GLES20.glUniformMatrix4fv(uMatrix, 1, false, mProjectionMatrix, 0);
+        GLES20.glUniformMatrix4fv(uMatrix, 1, false, mProjectionMatrix, 0);//
+        if (changeType == 1) {
+            //黑白路径
+            GLES20.glUniform1i(uChangeType, 1);
+            GLES20.glUniform3fv(uChangeColor, 1, grayFilterColorData, 0);
+        } else if (changeType == 2) {
+            GLES20.glUniform1i(uChangeType, 2);
+            GLES20.glUniform3fv(uChangeColor, 1, warmFilterColorData, 0);
+        } else if (changeType == 3) {
+            GLES20.glUniform1i(uChangeType, 2);
+            GLES20.glUniform3fv(uChangeColor, 1, coolFilterColorData, 0);
+        } else if (changeType == 4) {
+            GLES20.glUniform1i(uChangeType, 3);
+            GLES20.glUniform3fv(uChangeColor, 1, blurFilterColorData, 0);
+        }
 
         //绑定和激活纹理
         //因为我们生成了MIP，放到了GL_TEXTURE0 中，所以重新激活纹理

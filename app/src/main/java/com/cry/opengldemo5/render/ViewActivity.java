@@ -5,10 +5,8 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
-import com.cry.opengldemo5.shape.Ball3DShapeRender;
-import com.cry.opengldemo5.shape.Cone3DShapeRender;
-import com.cry.opengldemo5.shape.SquareShapeRender;
-import com.cry.opengldemo5.texture.Texture3DShapeRender;
+import com.cry.opengldemo5.texture.Texture2DShapeRender;
+import com.cry.opengldemo5.texture.TextureFilterShapeRender;
 
 public class ViewActivity extends AppCompatActivity {
 
@@ -34,7 +32,7 @@ public class ViewActivity extends AppCompatActivity {
             glSurfaceView = new GLSurfaceView(this);
             glSurfaceView.setEGLContextClientVersion(2);
             //设置自己的Render.Render 内进行图形的绘制
-            glSurfaceView.setRenderer(new Texture3DShapeRender(this));
+            glSurfaceView.setRenderer(new TextureFilterShapeRender(this));
             isRenderSet = true;
             setContentView(glSurfaceView);
         } else {
