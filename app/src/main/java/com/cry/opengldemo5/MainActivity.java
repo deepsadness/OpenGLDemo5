@@ -1,14 +1,13 @@
 package com.cry.opengldemo5;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
+import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+import android.view.Display;
 
-import com.cry.opengldemo5.render.GLESUtils;
+import com.cry.opengldemo5.camera.CameraActivity;
 import com.cry.opengldemo5.render.ViewActivity;
-
-import java.io.InputStream;
 
 /**
  * 0.简单的创建一个Open GL View
@@ -21,9 +20,21 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Display defaultDisplay = getWindowManager().getDefaultDisplay();
+        DisplayMetrics metrics = new DisplayMetrics();
+        defaultDisplay.getMetrics(metrics);
+
+        int widthPixels = metrics.widthPixels;
+        int heightPixels = metrics.heightPixels;
+        System.out.println("widthPixels=" + widthPixels);
+        System.out.println("heightPixels=" + heightPixels);
 
         findViewById(R.id.btn_view).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, ViewActivity.class);
+            startActivity(intent);
+        });
+        findViewById(R.id.btn_camera).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, CameraActivity.class);
             startActivity(intent);
         });
 
