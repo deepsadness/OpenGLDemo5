@@ -1,17 +1,9 @@
 package com.cry.opengldemo5.camera.core;
 
-import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.opengl.GLES20;
-import android.os.Environment;
-import android.util.Log;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -35,22 +27,20 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * DATE: 2018/5/9 下午10:05
  */
 public class CameraAPI14 implements ICamera {
+    private final ISize.ISizeMap mPreviewSizes = new ISize.ISizeMap();
+    private final ISize.ISizeMap mPictureSizes = new ISize.ISizeMap();
+    private final AtomicBoolean isPictureCaptureInProgress = new AtomicBoolean(false);
+    public Camera.Parameters mCameraParameters;
+    public ISize mPreviewSize;
+    public ISize mPicSize;
     //当前的id
     private int mCameraId;
     private Camera mCamera;
-    public Camera.Parameters mCameraParameters;
     private AspectRatio mRatio;
     private Camera.CameraInfo mCameraInfo = new Camera.CameraInfo();
-    private final ISize.ISizeMap mPreviewSizes = new ISize.ISizeMap();
-    private final ISize.ISizeMap mPictureSizes = new ISize.ISizeMap();
-
     private int mDesiredHeight = 1920;
     private int mDesiredWidth = 1080;
     private boolean mAutoFocus;
-    public ISize mPreviewSize;
-    public ISize mPicSize;
-
-    private final AtomicBoolean isPictureCaptureInProgress = new AtomicBoolean(false);
     private TakePhotoCallback photoCallBack;
 
 
@@ -162,7 +152,7 @@ public class CameraAPI14 implements ICamera {
 //        }
     }
 
-    private void releaseCamera() {
+    public void releaseCamera() {
         if (mCamera != null) {
             mCamera.release();
             mCamera = null;
