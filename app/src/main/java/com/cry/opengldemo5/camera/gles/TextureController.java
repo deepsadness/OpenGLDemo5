@@ -3,7 +3,10 @@ package com.cry.opengldemo5.camera.gles;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLSurfaceView;
+import android.view.View;
+import android.view.ViewGroup;
 
+import com.cry.opengldemo5.camera.Camera2Activity;
 import com.cry.opengldemo5.camera.core.ISize;
 import com.cry.opengldemo5.camera.gles.filter.AFilter;
 import com.cry.opengldemo5.camera.gles.filter.GroupFilter;
@@ -31,6 +34,8 @@ public class TextureController implements GLSurfaceView.Renderer {
     private TextureFilter mEffectFilter;                        //特效处理的Filter
     private GroupFilter mGroupFilter;                           //中间特效
     private AFilter mShowFilter;
+    private Object mNativeWindowSurface;
+    private Camera2Activity.Camera1Render mRender;
 
     public TextureController(Context context) {
         this.mContext = context;
@@ -41,14 +46,14 @@ public class TextureController implements GLSurfaceView.Renderer {
         mGLView = new GLView(context);
 
         //为了避免GLView的attachToWindow和detachFromWindow奔溃？？
-//        ViewGroup v = new ViewGroup(context) {
-//            @Override
-//            protected void onLayout(boolean changed, int l, int t, int r, int b) {
-//
-//            }
-//        };
-//        v.addView(mGLView);
-//        v.setVisibility(View.GONE);
+        ViewGroup v = new ViewGroup(context) {
+            @Override
+            protected void onLayout(boolean changed, int l, int t, int r, int b) {
+
+            }
+        };
+        v.addView(mGLView);
+        v.setVisibility(View.GONE);
         //开始设置滤镜。因为经过多次滤镜。所以我们需要创建多个滤镜
 
         //设置Camera中提供的previewSize 和实际的picSize
@@ -87,7 +92,54 @@ public class TextureController implements GLSurfaceView.Renderer {
         mGLView.requestRender();
     }
 
+    public void surfaceCreated(Object nativeWindow) {
+        this.mNativeWindowSurface = nativeWindow;
+        //调用GLView的生命周期方法？
+        mGLView.surfaceCreated(null);
+    }
+
+    public void setRender(Camera2Activity.Camera1Render render) {
+        mRender = render;
+        picSize = mRender.mPictureSize;
+    }
+
+    public void surfaceChanged(int width, int height) {
+        this.previewSize = new ISize(width, height);
+        mGLView.surfaceChanged(null, 0, width, height);
+    }
+
+    public void surfaceDestroyed() {
+        mGLView.surfaceDestroyed(null);
+    }
+
+    public void onResume() {
+        if (mGLView != null) {
+            mGLView.onResume();
+        }
+    }
+
+    public void onPause() {
+        if (mGLView != null) {
+            mGLView.onPause();
+        }
+    }
+
+    public void destroy() {
+        if (mRender != null) {
+            mRender.onDestroy();
+        }
+        mGLView.surfaceDestroyed(null);
+        mGLView.detachedFromWindow();
+    }
+
     //这里还是使用GLSurfaceView中提供了的EGL环境
+
+    /**
+     * 自定义GLSurfaceView，暴露出onAttachedToWindow
+     * 方法及onDetachedFromWindow方法，取消holder的默认监听
+     * onAttachedToWindow及onDetachedFromWindow必须保证view
+     * 存在Parent
+     */
     private class GLView extends GLSurfaceView {
 
         public GLView(Context context) {
@@ -117,5 +169,14 @@ public class TextureController implements GLSurfaceView.Renderer {
             //默认是设置成false.这里设置成true,表示的在GLSurface OnPause时，还保存这个Context,设置成false,就是释放
             setPreserveEGLContextOnPause(true);
         }
+
+        public void attachedToWindow() {
+            super.onAttachedToWindow();
+        }
+
+        public void detachedFromWindow() {
+            super.onDetachedFromWindow();
+        }
+
     }
 }
