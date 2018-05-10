@@ -2,6 +2,8 @@ package com.cry.opengldemo5.camera.core;
 
 import android.graphics.SurfaceTexture;
 
+import java.nio.ByteBuffer;
+
 /**
  * DESCRIPTION:
  * Author: Cry

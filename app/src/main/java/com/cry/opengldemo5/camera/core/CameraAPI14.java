@@ -1,11 +1,20 @@
 package com.cry.opengldemo5.camera.core;
 
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.opengl.GLES20;
+import android.os.Environment;
+import android.util.Log;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.SortedSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * DESCRIPTION: Camera1的Wrapper类。 API 14
@@ -34,6 +43,9 @@ public class CameraAPI14 implements ICamera {
     private boolean mAutoFocus;
     public ISize mPreviewSize;
     public ISize mPicSize;
+
+    private final AtomicBoolean isPictureCaptureInProgress = new AtomicBoolean(false);
+    private TakePhotoCallback photoCallBack;
 
 
     public CameraAPI14() {
@@ -76,17 +88,20 @@ public class CameraAPI14 implements ICamera {
             return;
         }
         //当前先不考虑Orientation
+        ISize previewSize;
+        mPreviewSize = new ISize(mDesiredWidth, mDesiredHeight);
         if (mCameraId == Camera.CameraInfo.CAMERA_FACING_BACK) {
-            mPreviewSize = new ISize(mDesiredHeight, mDesiredWidth);
+            previewSize = new ISize(mDesiredHeight, mDesiredWidth);
+            ;
 //            mCameraParameters.setRotation(90);
         } else {
-            mPreviewSize = new ISize(mDesiredWidth, mDesiredHeight);
+            previewSize = mPreviewSize;
         }
 
         //默认去取最大的尺寸
         mPicSize = mPictureSizes.sizes(mRatio).last();
 
-        mCameraParameters.setPreviewSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
+        mCameraParameters.setPreviewSize(previewSize.getWidth(), previewSize.getHeight());
         mCameraParameters.setPictureSize(mPicSize.getWidth(), mPicSize.getHeight());
 
         //设置对角和闪光灯
@@ -206,8 +221,46 @@ public class CameraAPI14 implements ICamera {
 
     @Override
     public void takePhoto(TakePhotoCallback callback) {
+        this.photoCallBack = callback;
+
+        if (getAutoFocus()) {
+            mCamera.cancelAutoFocus();
+            mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                @Override
+                public void onAutoFocus(boolean success, Camera camera) {
+                    takePictureInternal();
+                }
+            });
+        } else {
+            takePictureInternal();
+        }
+
 
     }
+
+
+    void takePictureInternal() {
+        if (!isPictureCaptureInProgress.getAndSet(true)) {
+            mCamera.takePicture(null, null, null, new Camera.PictureCallback() {
+                @Override
+                public void onPictureTaken(byte[] data, Camera camera) {
+                    isPictureCaptureInProgress.set(false);
+                    if (photoCallBack != null) {
+                        photoCallBack.onTakePhoto(data, mPreviewSize.getWidth(), mPreviewSize.getHeight());
+                    }
+                    camera.cancelAutoFocus();
+                    camera.startPreview();
+                }
+            });
+        }
+    }
+
+
+    boolean getAutoFocus() {
+        String focusMode = mCameraParameters.getFocusMode();
+        return focusMode != null && focusMode.contains("continuous");
+    }
+
 
     @Override
     public void setOnPreviewFrameCallback(PreviewFrameCallback callback) {
