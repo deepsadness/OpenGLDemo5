@@ -1,24 +1,13 @@
 package com.cry.opengldemo5.camera;
 
-import android.Manifest;
-import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.cry.opengldemo5.R;
 import com.cry.opengldemo5.camera.core.ICamera;
@@ -31,7 +20,7 @@ import java.nio.ByteBuffer;
  * <p>
  * 简单的可以通过在GLThread中 调用GL.glReadPixels方式得到显存
  */
-public class CameraActivity extends CameraPermissionActivity {
+public class CameraActivity extends BasePmActivity {
 
 
     public CameraView mCameraView;
@@ -97,7 +86,7 @@ public class CameraActivity extends CameraPermissionActivity {
     }
 
     @Override
-    public void startCamera() {
+    public void initCamera() {
         if (mCameraView == null) {
             mCameraView = new CameraView(this);
             mContainer.addView(mCameraView, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));

@@ -21,7 +21,7 @@ import com.cry.opengldemo5.R;
  * -
  * -
  */
-public class Camera2Activity extends CameraPermissionActivity {
+public class Camera2Activity extends BasePmActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +30,7 @@ public class Camera2Activity extends CameraPermissionActivity {
     }
 
     @Override
-    protected void startCamera() {
+    protected void initCamera() {
 
     }
 }

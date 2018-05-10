@@ -18,7 +18,7 @@ import android.widget.Toast;
  * 主要是申请相机的权限
  * Created by a2957 on 2018/5/10.
  */
-public abstract class CameraPermissionActivity extends AppCompatActivity {
+public abstract class BasePmActivity extends AppCompatActivity {
     public static final int REQUEST_CAMERA_PERMISSION = 1;
     protected boolean isRequestPass = false;
 
@@ -31,7 +31,7 @@ public abstract class CameraPermissionActivity extends AppCompatActivity {
 
     }
 
-    protected abstract void startCamera();
+    protected abstract void initCamera();
 
     @Override
     protected void onResume() {
@@ -53,7 +53,7 @@ public abstract class CameraPermissionActivity extends AppCompatActivity {
                 }
                 isRequestPass = true;
                 // No need to start camera here; it is handled by onResume
-                startCamera();
+                initCamera();
                 break;
         }
     }
@@ -63,7 +63,7 @@ public abstract class CameraPermissionActivity extends AppCompatActivity {
                 && (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)) {
             Toast.makeText(this, "已经获取权限", Toast.LENGTH_SHORT).show();
             isRequestPass = true;
-            startCamera();
+            initCamera();
         } else if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
             ConfirmationDialogFragment
                     .newInstance("camera_permission_confirmation",
