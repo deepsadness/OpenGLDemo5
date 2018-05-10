@@ -24,6 +24,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * pic的图片大小
  * 对焦模式
  * 闪光灯模式
+ *
+ * 需要注意的是相机的旋转方向的问题。
+ * 这里是由两个地方去控制预览图的方向的
+ * 1. 通过设置相机的displayOritation 和 pramaras中的旋转方向。主要它可以保存在选摄像头的时候的参数中
+ * 2. 因为预览图是 通过SurfaceTextureView 中显示。可以设置matrix来控制它的旋转。  如这里是手动去控制纹理的绘制的话，则可以自己控制viewMatrix来控制
+ *
  * <p>
  * Author: Cry
  * DATE: 2018/5/9 下午10:05
